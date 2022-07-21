@@ -106,7 +106,7 @@ class PersonCl {
 const Umair = new PersonCl('Umair Qaiser', 1999);
 console.log(Umair);
 // Umair.calcAge();
-// Umair.Nickname;
+// Umair.Nickna
 // Umair.fullName;
 
 // CHALLENGE 2
@@ -137,3 +137,4 @@ const x = new Car('X', 35);
 x.accelerate();
 x.speedUS = 50;
 console.log(x);
+a;
