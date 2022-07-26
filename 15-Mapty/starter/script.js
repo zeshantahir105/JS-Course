@@ -78,6 +78,7 @@ class App {
   #mapEvent;
   #workouts = [];
   #coords;
+  #removedWorkouts = [];
   constructor() {
     // Get user's position
     this._getPosition();
@@ -92,8 +93,7 @@ class App {
       location.reload();
     });
 
-    // document.querySelectorAll('.cross').forEach(cross =>
-    //   cross.addEventListener('click', function (e) {
+    //   function (e) {
     //     e.target.closest('.workout').remove();
     //     this.#map.removeLayer(e.target.closest('.workout').marker);
     //   })
@@ -103,6 +103,7 @@ class App {
     form.addEventListener('submit', this._newworkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField.bind(this));
     containerworkouts.addEventListener('click', this._moveToPopup.bind(this));
+    this.#workouts.forEach(wo => this._applyEventListenerToCross(wo));
   }
   _getPosition() {
     navigator.geolocation.getCurrentPosition(
@@ -170,9 +171,15 @@ class App {
         // !Number.isFinite(cadence)
         !validInputs(distance, duration, cadence) ||
         !allPositive(distance, duration, cadence)
-      )
-        return alert('Inputs have to be positive number!');
-
+      ) {
+        e.target.childNodes[13].innerText =
+          'Inputs have to be positive number!';
+        e.target.style.border = '2px solid red';
+        return;
+      }
+      // return alert('Inputs have to be positive number!');
+      e.target.childNodes[13].innerText = '';
+      e.target.style.border = 'none';
       workout = new Running(this.#coords, distance, duration, cadence);
     }
     if (String(type) === 'cycling') {
@@ -184,28 +191,59 @@ class App {
         // !Number.isFinite(cadence)
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
-      )
-        return alert('Inputs have to be positive number!');
+      ) {
+        e.target.childNodes[13].innerText =
+          'Inputs have to be positive number!';
+        e.target.style.border = '2px solid red';
+        return;
+      }
+      // return alert('Inputs have to be positive number!');
+      e.target.childNodes[13].innerText = '';
+      e.target.style.border = 'none';
       // console.log(elevation);
       workout = new Cycling(this.#coords, distance, duration, elevation);
     }
 
     this._renderWorkoutMarker(workout);
     // Render workout on list
+
+    console.log(workout);
+    // if (workout != null) {
     this._renderWorkout(workout);
-    // console.log(this.#workouts);
-
-    // console.log(workout);
-
     //Add new object to workout array
+    // }
     this.#workouts.push(workout);
 
     this._hideForm();
 
+    this._applyEventListenerToCross(workout);
+
     //  Set local storage to all workouts.
     this._setLocalStorage();
+    // console.log(this.#workouts);
   }
 
+  _applyEventListenerToCross(w) {
+    document.querySelectorAll('.workout').forEach((wo, i) => {
+      // console.log(workout.id);
+      // console.log(wo.dataset.id);
+      if (wo.dataset.id == w.id) {
+        const span = wo.childNodes[3];
+        span.addEventListener('click', function () {
+          // console.log(wo);
+          wo.remove();
+          app.#map.removeLayer(w._marker);
+          // this.#workouts.(i);
+          app.#workouts = app.#workouts.filter(data => data.id != w.id);
+          // console.log(app.#workouts);
+          app._setLocalStorage();
+          // console.log(app.#workouts);
+        });
+        // const span = wo.closest('.cross');
+        // console.log(span);
+      }
+    });
+  }
   _hideForm() {
     // Empty inputs
     inputDistance.value =
@@ -217,22 +255,43 @@ class App {
     form.style.display = 'none';
     form.classList.add('hidden');
     setTimeout(() => (form.style.display = 'grid'), 1000);
+  }
 
-    // const workouts_2 = this.#workouts;
-    // let mapp = this.#map;
-    // console.log(workouts_2);
-    // document.querySelectorAll('.cross').forEach(cross =>
-    //   cross.addEventListener('click', function (e) {
-    //     const target = e.target.closest('.workout');
-    //     // mapp.removeLayer(e.target.closest('.workout').marker);
-    //     // console.log(this.marker);
-    //     // workouts_2.forEach(
-    //     //   w => mapp.removeLayer(w.marker)
-    //     //   // w.id == target.dataset.id ? mapp.removeLayer(w.marker) : ''
-    //     // );
-    //     // console.log(target.dataset.id);
-    //   })
-    // );
+  _removeWorkout(workout) {
+    console.log(workout);
+    // this.#workouts.forEach((w, i) => {
+    //   if (w.id == workout.id) {
+    //     this.#workouts.splice(i);
+    //   }
+    // });
+    // this._setLocalStorage();
+    // this._getLocalStorage();
+    // location.reload();
+    // console.log(this.#workouts);
+    //  const workouts_2 = this.#workouts;
+    //  const mapp = this.#map;
+    //  console.log(workouts_2);
+    //  document.querySelectorAll('.cross').forEach(cross =>
+    //    cross.addEventListener('click', function (e) {
+    //      const target = e.target.closest('.workout');
+    //      target.remove();
+    //      // mapp.removeLayer(e.target.closest('.workout').marker);
+    //      // console.log(this.marker);
+    //      workouts_2.forEach(
+    //        w => {
+    //          if (mapp) {
+    //            if (w.id == target.dataset.id) {
+    //              mapp.removeLayer(w._marker);
+    //              app._removeWorkout(w);
+    //            }
+    //          }
+    //        }
+    //        // w => mapp.removeLayer(w.marker);
+    //        // console.log(w._marker)
+    //      );
+    //      // console.log(target.dataset.id);
+    //    })
+    //  );
   }
   _renderWorkoutMarker(workout) {
     // Display Marker
@@ -252,13 +311,14 @@ class App {
       )
       .openPopup();
     workout.marker = 2;
-    console.log(workout.id);
-    console.log(this.#workouts.find(work => work.id == workout.id));
+    // console.log(workout.id);
+    workout._marker = marker;
   }
 
   _renderWorkout(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id=${workout.id}>
+    <h5 class="errorMsg"></h5>
     <span class="cross">x</span>
           <h2 class="workout__title">${workout.description}</h2>
           <div class="workout__details">
@@ -277,10 +337,10 @@ class App {
 
     if (workout.type === 'running') {
       // console.log('worked');
+      // <span class="workout__value">${workout.pace.toFixed(1)}</span>
       html += `
        <div class="workout__details">
             <span class="workout__icon">⚡️</span>
-            <span class="workout__value">${workout.pace.toFixed(1)}</span>
             <span class="workout__unit">min/km</span>
       </div>
       <div class="workout__details">
@@ -291,11 +351,11 @@ class App {
       </li>
 `;
     }
+    // <span class="workout__value">${workout.speed.toFixed(1)}</span>
     if (workout.type === 'cycling') {
       html += `
        <div class="workout__details">
             <span class="workout__icon">⚡️</span>
-          <span class="workout__value">${workout.speed.toFixed(1)}</span>
             <span class="workout__unit">km/h</span>
       </div>
       <div class="workout__details" >
@@ -307,6 +367,31 @@ class App {
       `;
     }
     form.insertAdjacentHTML('afterend', html);
+
+    // const workouts_2 = this.#workouts;
+    // const mapp = this.#map;
+    // console.log(workouts_2);
+    // document.querySelectorAll('.cross').forEach(cross =>
+    //   cross.addEventListener('click', function (e) {
+    //     const target = e.target.closest('.workout');
+    //     target.remove();
+    //     // mapp.removeLayer(e.target.closest('.workout').marker);
+    //     // console.log(this.marker);
+    //     workouts_2.forEach(
+    //       w => {
+    //         if (mapp) {
+    //           if (w.id == target.dataset.id) {
+    //             mapp.removeLayer(w._marker);
+    //             app._removeWorkout(w);
+    //           }
+    //         }
+    //       }
+    //       // w => mapp.removeLayer(w.marker);
+    //       // console.log(w._marker)
+    //     );
+    //     // console.log(target.dataset.id);
+    //   })
+    // );
   }
 
   _moveToPopup(e) {
@@ -320,13 +405,14 @@ class App {
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
-
-    this.#map.setView(workout.coords, 13, {
-      animate: true,
-      pan: {
-        duration: 1,
-      },
-    });
+    if (workout != null) {
+      this.#map.setView(workout.coords, 13, {
+        animate: true,
+        pan: {
+          duration: 1,
+        },
+      });
+    }
 
     // using the public interface
     // workout.click();
@@ -354,7 +440,15 @@ class App {
       markers.push(w.marker);
     });
     this.#workouts.forEach(w => delete w.marker);
-    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+    localStorage.removeItem('workouts');
+    localStorage.removeItem('ids');
+    localStorage.removeItem('markers');
+    // console.log(this.#workouts);
+    // location.reload();
+    localStorage.setItem(
+      'workouts',
+      JSON.stringify(this.#workouts, this._getCircularReplacer())
+    );
     localStorage.setItem(
       'markers',
       JSON.stringify(markers, this._getCircularReplacer())
@@ -386,8 +480,10 @@ class App {
 
   _render() {
     // Adding Reset Function
-    const html = `<button id="reset_buttonn" class="button-primary">CLEAR</button>`;
+    let html = `<button id="reset_buttonn" class="button-primary">CLEAR</button>`;
     containerworkouts.insertAdjacentHTML('afterend', html);
+    html = `<h5 class="errorMsg"></h5>`;
+    form.insertAdjacentHTML('beforeend', html);
 
     // Adding cross button
   }
