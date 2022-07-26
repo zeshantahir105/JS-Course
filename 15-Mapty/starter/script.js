@@ -4,7 +4,7 @@ class workout {
   date = new Date();
   id = (Date.now() + '').slice(-10);
   clicks = 0;
-
+  _marker = '';
   constructor(coords, distance, duration) {
     // this.date = ...
     // this.id = ...
@@ -72,7 +72,7 @@ const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
-
+const sidebar = document.querySelector('.sidebar');
 class App {
   #map;
   #mapEvent;
@@ -84,6 +84,20 @@ class App {
 
     // Get data from local storage
     this._getLocalStorage();
+
+    this._render();
+    const b11 = document.getElementById('reset_buttonn');
+    b11.addEventListener('click', function () {
+      localStorage.removeItem('workouts');
+      location.reload();
+    });
+
+    // document.querySelectorAll('.cross').forEach(cross =>
+    //   cross.addEventListener('click', function (e) {
+    //     e.target.closest('.workout').remove();
+    //     this.#map.removeLayer(e.target.closest('.workout').marker);
+    //   })
+    // );
 
     // Attach event handlers
     form.addEventListener('submit', this._newworkout.bind(this));
@@ -101,7 +115,7 @@ class App {
   }
   _loadMap(position) {
     // SUCCESS SCNERIO
-    console.log('LOAD MAP!');
+    // console.log('LOAD MAP!');
     const { latitude, longitude } = position.coords;
     // const { longitude } = position.coords;
     // console.log(position);
@@ -176,12 +190,16 @@ class App {
       workout = new Cycling(this.#coords, distance, duration, elevation);
     }
 
-    //Add new object to workout array
-    this.#workouts.push(workout);
     this._renderWorkoutMarker(workout);
     // Render workout on list
     this._renderWorkout(workout);
     // console.log(this.#workouts);
+
+    // console.log(workout);
+
+    //Add new object to workout array
+    this.#workouts.push(workout);
+
     this._hideForm();
 
     //  Set local storage to all workouts.
@@ -199,10 +217,26 @@ class App {
     form.style.display = 'none';
     form.classList.add('hidden');
     setTimeout(() => (form.style.display = 'grid'), 1000);
+
+    // const workouts_2 = this.#workouts;
+    // let mapp = this.#map;
+    // console.log(workouts_2);
+    // document.querySelectorAll('.cross').forEach(cross =>
+    //   cross.addEventListener('click', function (e) {
+    //     const target = e.target.closest('.workout');
+    //     // mapp.removeLayer(e.target.closest('.workout').marker);
+    //     // console.log(this.marker);
+    //     // workouts_2.forEach(
+    //     //   w => mapp.removeLayer(w.marker)
+    //     //   // w.id == target.dataset.id ? mapp.removeLayer(w.marker) : ''
+    //     // );
+    //     // console.log(target.dataset.id);
+    //   })
+    // );
   }
   _renderWorkoutMarker(workout) {
     // Display Marker
-    L.marker(workout.coords)
+    const marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -217,11 +251,15 @@ class App {
         `${workout.type === 'running' ? '🏃‍♂️' : '🚴‍♀️'} ${workout.description}`
       )
       .openPopup();
+    workout.marker = 2;
+    console.log(workout.id);
+    console.log(this.#workouts.find(work => work.id == workout.id));
   }
 
   _renderWorkout(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id=${workout.id}>
+    <span class="cross">x</span>
           <h2 class="workout__title">${workout.description}</h2>
           <div class="workout__details">
             <span class="workout__icon">${
@@ -293,24 +331,69 @@ class App {
     // using the public interface
     // workout.click();
   }
+
+  _getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+  };
+
   _setLocalStorage() {
+    // console.log(this.#workouts);
+    const markers = [];
+    const id = [];
+    this.#workouts.forEach(w => id.push(w.id));
+    this.#workouts.forEach(w => {
+      markers.push(w.marker);
+    });
+    this.#workouts.forEach(w => delete w.marker);
     localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+    localStorage.setItem(
+      'markers',
+      JSON.stringify(markers, this._getCircularReplacer())
+    );
+    localStorage.setItem('ids', JSON.stringify(id));
+
+    // console.log(markers);
+    // localStorage.setItem('workouts', JSON.stringify(this.#workouts));
   }
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
+    const markers = JSON.parse(localStorage.getItem('markers'));
+    const ids = JSON.parse(localStorage.getItem('ids'));
+
     if (!data) return;
     this.#workouts = data;
-    console.log(this.#workouts);
-    this.#workouts.forEach(work => {
-      this._renderWorkout(work);
+    // console.log();
+    this.#workouts.forEach((work, i) => {
+      ids.forEach(id => {
+        if (id === work.id) {
+          work.marker = markers[i];
+          this._renderWorkout(work);
+          // console.log(work.id, id);
+        }
+      });
     });
+    // console.log(this.#workouts);
   }
 
-  reset() {
-    localStorage.removeItem('workouts');
-    location.reload();
+  _render() {
+    // Adding Reset Function
+    const html = `<button id="reset_buttonn" class="button-primary">CLEAR</button>`;
+    containerworkouts.insertAdjacentHTML('afterend', html);
+
+    // Adding cross button
   }
 }
+
 const app = new App();
 // app.reset();
 // app._getPosition();
+// console.log(2);

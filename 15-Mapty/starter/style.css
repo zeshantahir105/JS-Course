@@ -76,6 +76,7 @@ a:visited {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 0.75rem 1.5rem;
+  position: relative;
 }
 .workout--running {
   border-left: 5px solid var(--color-brand--2);
@@ -93,6 +94,7 @@ a:visited {
 .workout__details {
   display: flex;
   align-items: baseline;
+  position: relative;
 }
 
 .workout__icon {
@@ -217,4 +219,29 @@ a:visited {
 }
 .cycling-popup .leaflet-popup-content-wrapper {
   border-left: 5px solid var(--color-brand--1);
+}
+
+.button-primary {
+  padding: 20px;
+  font-size: 20px;
+  margin: 10px;
+  width: 100%;
+  font-weight: bolder;
+  background: var(--color-brand--2);
+  border: 2px solid rgb(214, 222, 224);
+  color: rgba(255, 255, 255, 1);
+  opacity: 1;
+  text-align: center;
+  text-decoration: none;
+}
+.button-primary:visited {
+  color: white;
+}
+
+.cross {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  font-size: 15px;
+  color: white;
 }
