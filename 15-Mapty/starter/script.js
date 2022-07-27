@@ -103,7 +103,13 @@ class App {
     form.addEventListener('submit', this._newworkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField.bind(this));
     containerworkouts.addEventListener('click', this._moveToPopup.bind(this));
-    this.#workouts.forEach(wo => this._applyEventListenerToCross(wo));
+    this.#workouts.forEach(wo => {
+      this._applyEventListenerToCross(wo);
+      this._applyEventListenerToEdit(wo);
+    });
+    // document.querySelectorAll('.edit').addEventListener('click', function (e) {
+    //   this._applyEventListenerToEdit(e);
+    // });
   }
   _getPosition() {
     navigator.geolocation.getCurrentPosition(
@@ -161,6 +167,10 @@ class App {
     let workout;
     // CHECKING workout!
 
+    let errorMsg = '';
+    e.target.childNodes.forEach(cn =>
+      cn.className == 'errorMsg' ? (errorMsg = cn) : ''
+    );
     if (String(type) === 'running') {
       const cadence = +inputCadence.value;
 
@@ -172,13 +182,13 @@ class App {
         !validInputs(distance, duration, cadence) ||
         !allPositive(distance, duration, cadence)
       ) {
-        e.target.childNodes[13].innerText =
-          'Inputs have to be positive number!';
+        errorMsg.innerText = 'Inputs have to be positive number!';
         e.target.style.border = '2px solid red';
         return;
       }
       // return alert('Inputs have to be positive number!');
-      e.target.childNodes[13].innerText = '';
+
+      errorMsg.innerText = '';
       e.target.style.border = 'none';
       workout = new Running(this.#coords, distance, duration, cadence);
     }
@@ -192,13 +202,12 @@ class App {
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
       ) {
-        e.target.childNodes[13].innerText =
-          'Inputs have to be positive number!';
+        errorMsg.innerText = 'Inputs have to be positive number!';
         e.target.style.border = '2px solid red';
         return;
       }
       // return alert('Inputs have to be positive number!');
-      e.target.childNodes[13].innerText = '';
+      errorMsg.innerText = '';
       e.target.style.border = 'none';
       // console.log(elevation);
       workout = new Cycling(this.#coords, distance, duration, elevation);
@@ -212,23 +221,112 @@ class App {
     this._renderWorkout(workout);
     //Add new object to workout array
     // }
+
     this.#workouts.push(workout);
 
     this._hideForm();
-
     this._applyEventListenerToCross(workout);
+    this._applyEventListenerToEdit(workout);
 
     //  Set local storage to all workouts.
     this._setLocalStorage();
     // console.log(this.#workouts);
   }
+  _applyEventListenerToEdit(w) {
+    document.querySelectorAll('.workout').forEach((wo, i) => {
+      // console.log(workout.id);
+      // console.log(wo.dataset.id);
+      if (wo.dataset.id == w.id) {
+        let span = '';
+        wo.childNodes.forEach(cn =>
+          cn.className == 'edit' ? (span = cn) : ''
+        );
 
+        // const span = wo.childNodes[3];
+        span.addEventListener('click', function () {
+          form.classList.remove('hidden');
+          inputType.value = w.type;
+          inputDistance.value = w.distance;
+          inputDuration.value = w.duration;
+          if (w.type === 'cycling') {
+            document.querySelector('.form__input--type').value = 'cycling';
+            document.querySelector(
+              '.form__input--elevation'
+            ).value = `${w.elevationGain}`;
+            // document.querySelector('.form__label').classList.remove('hidden');
+
+            document.querySelectorAll('.form__row').forEach(
+              fl => {
+                if (fl.childNodes[1].textContent == 'Elev Gain')
+                  fl.classList.remove('form__row--hidden');
+                if (fl.childNodes[1].textContent == 'Cadence') {
+                  fl.classList.add('form__row--hidden');
+                }
+              }
+              // fl.childNodes[0].textContent == 'Cadence'
+              // ? // ? fl.classList.add('form__row--hidden')
+              // : ''
+            );
+
+            document.querySelector('.form__input--cadence').value = ``;
+          } else {
+            document.querySelector('.form__input--type').value = 'running';
+            document.querySelector(
+              '.form__input--cadence'
+            ).value = `${w.cadence}`;
+
+            document.querySelectorAll('.form__row').forEach(
+              fl => {
+                if (fl.childNodes[1].textContent == 'Elev Gain')
+                  fl.classList.add('form__row--hidden');
+                if (fl.childNodes[1].textContent == 'Cadence') {
+                  fl.classList.remove('form__row--hidden');
+                }
+              }
+              // fl.childNodes[0].textContent == 'Cadence'
+              // ? // ? fl.classList.add('form__row--hidden')
+              // : ''
+            );
+
+            document.querySelector('.form__input--elevation').value = ``;
+          }
+
+          app._removeWorkout(w);
+
+          // if (clicked) {
+
+          // } else {
+          // app._newworkout(w);
+          // }
+
+          // node.className == 'form__input--distance' ? console.log(node) : '';
+          app._setLocalStorage();
+          // location.reload();
+          // console.log(wo);
+          // wo.remove();
+          // app.#map.removeLayer(w._marker);
+          // this.#workouts.(i);
+
+          // app.#workouts = app.#workouts.filter(data => data.id != w.id);
+          // // console.log(app.#workouts);
+          // app._setLocalStorage();
+          // console.log(app.#workouts);
+        });
+        // const span = wo.closest('.cross');
+        // console.log(span);
+      }
+    });
+  }
   _applyEventListenerToCross(w) {
     document.querySelectorAll('.workout').forEach((wo, i) => {
       // console.log(workout.id);
       // console.log(wo.dataset.id);
       if (wo.dataset.id == w.id) {
-        const span = wo.childNodes[3];
+        let span = '';
+        wo.childNodes.forEach(cn =>
+          cn.className == 'cross' ? (span = cn) : ''
+        );
+        // const span = wo.childNodes[3];
         span.addEventListener('click', function () {
           // console.log(wo);
           wo.remove();
@@ -257,41 +355,16 @@ class App {
     setTimeout(() => (form.style.display = 'grid'), 1000);
   }
 
-  _removeWorkout(workout) {
-    console.log(workout);
-    // this.#workouts.forEach((w, i) => {
-    //   if (w.id == workout.id) {
-    //     this.#workouts.splice(i);
-    //   }
-    // });
-    // this._setLocalStorage();
-    // this._getLocalStorage();
-    // location.reload();
-    // console.log(this.#workouts);
-    //  const workouts_2 = this.#workouts;
-    //  const mapp = this.#map;
-    //  console.log(workouts_2);
-    //  document.querySelectorAll('.cross').forEach(cross =>
-    //    cross.addEventListener('click', function (e) {
-    //      const target = e.target.closest('.workout');
-    //      target.remove();
-    //      // mapp.removeLayer(e.target.closest('.workout').marker);
-    //      // console.log(this.marker);
-    //      workouts_2.forEach(
-    //        w => {
-    //          if (mapp) {
-    //            if (w.id == target.dataset.id) {
-    //              mapp.removeLayer(w._marker);
-    //              app._removeWorkout(w);
-    //            }
-    //          }
-    //        }
-    //        // w => mapp.removeLayer(w.marker);
-    //        // console.log(w._marker)
-    //      );
-    //      // console.log(target.dataset.id);
-    //    })
-    //  );
+  _removeWorkout(wk) {
+    document.querySelectorAll('.workout').forEach(w => {
+      if (w.dataset.id == wk.id) {
+        w.remove();
+        workout._marker = wk._marker;
+        app.#map.removeLayer(wk._marker);
+        app.#workouts = app.#workouts.filter(data => data.id != w.dataset.id);
+        app._setLocalStorage();
+      }
+    });
   }
   _renderWorkoutMarker(workout) {
     // Display Marker
@@ -319,6 +392,7 @@ class App {
     let html = `
     <li class="workout workout--${workout.type}" data-id=${workout.id}>
     <h5 class="errorMsg"></h5>
+    <span class="edit">🖋️</span>
     <span class="cross">x</span>
           <h2 class="workout__title">${workout.description}</h2>
           <div class="workout__details">
@@ -337,10 +411,10 @@ class App {
 
     if (workout.type === 'running') {
       // console.log('worked');
-      // <span class="workout__value">${workout.pace.toFixed(1)}</span>
       html += `
-       <div class="workout__details">
-            <span class="workout__icon">⚡️</span>
+      <div class="workout__details">
+      <span class="workout__icon">⚡️</span>
+      <span class="workout__value">${workout.pace.toFixed(1)}</span>
             <span class="workout__unit">min/km</span>
       </div>
       <div class="workout__details">
@@ -351,11 +425,11 @@ class App {
       </li>
 `;
     }
-    // <span class="workout__value">${workout.speed.toFixed(1)}</span>
     if (workout.type === 'cycling') {
       html += `
-       <div class="workout__details">
-            <span class="workout__icon">⚡️</span>
+      <div class="workout__details">
+      <span class="workout__icon">⚡️</span>
+      <span class="workout__value">${workout.speed.toFixed(1)}</span>
             <span class="workout__unit">km/h</span>
       </div>
       <div class="workout__details" >
@@ -484,7 +558,9 @@ class App {
     containerworkouts.insertAdjacentHTML('afterend', html);
     html = `<h5 class="errorMsg"></h5>`;
     form.insertAdjacentHTML('beforeend', html);
-
+    html = `<h4>Modified By: Muhammad Zeshan Tahir</h4>`;
+    document.querySelector('.copyright').insertAdjacentHTML('afterend', html);
+    // document.querySelector('h4').style.textAlign = 'center';
     // Adding cross button
   }
 }
