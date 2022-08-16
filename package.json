@@ -1,0 +1,22 @@
+{
+  "name": "17-modern-js-modules-tooling",
+  "version": "1.0.0",
+  "description": "This branch of the repo contains starter files and final code for all sections and projects of the course, **exactly as shown in the videos**.",
+  "scripts": {
+    "start": "parcel 17-Modern-JS-Modules-Tooling/starter/index.html",
+    "build": "parcel build 17-Modern-JS-Modules-Tooling/starter/index.html"
+  },
+  "author": "Zeshan",
+  "license": "ISC",
+  "dependencies": {
+    "core-js": "^3.24.1",
+    "leaflet": "^1.8.0",
+    "lodash-es": "^4.17.21",
+    "regenerator-runtime": "^0.13.9"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.7.0",
+    "parcel": "^2.7.0"
+  },
+  "main": "index.js"
+}
