@@ -1,3 +1,5 @@
+import ResultsView from '../views/resultsView.js';
+
 class SearchView {
   _parentEl = document.querySelector('.search');
 
@@ -13,7 +15,12 @@ class SearchView {
   addHandlerSearch(handler) {
     this._parentEl.addEventListener('submit', function (e) {
       e.preventDefault();
-      handler();
+      try {
+        handler();
+      } catch (err) {
+        ResultsView.renderError();
+        throw err;
+      }
     });
   }
 }
