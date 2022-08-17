@@ -2,6 +2,7 @@ import * as model from './model.js';
 import RecipeView from './views/recipeView.js';
 import SearchView from './views/searchView';
 import ResultsView from './views/resultsView.js';
+import BookmarksView from './views/bookmarksView.js';
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import PaginationView from './views/paginationView.js';
@@ -58,16 +59,12 @@ const controlPagination = function (goToPage) {
   PaginationView.render(model.state.search);
 };
 
-const controlServings = function () {
-  // Updating the recipe servings (in state)
-  model.updateServings(6);
-
-  // Update the recipe view.
-};
-
 const controlAddBookmark = function () {
-  model.addBookmark(model.state.recipe);
-  console.log(model.state.recipe);
+  if (!model.state.recipe.bookmarked) model.addBookmark(model.state.recipe);
+  else model.deleteBookmark(model.state.recipe.id);
+  // console.log(model.state.recipe);
+
+  BookmarksView.render(model.state.bookmarks);
 };
 
 const init = function () {

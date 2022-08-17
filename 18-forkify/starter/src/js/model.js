@@ -3,6 +3,7 @@ import { API_URL } from './config.js';
 import { getJSON } from './helpers.js';
 import { RES_PER_PAGE } from './config';
 import resultsView from './views/resultsView.js';
+import recipeView from './views/recipeView.js';
 export const state = {
   recipe: {},
   search: {
@@ -31,6 +32,11 @@ export const loadRecipe = async function (id) {
                 ingredients: recipe.ingredients,
                 bookmarked: false,
             };
+
+    if (state.bookmarks.some(bookmark => bookmark.id === id))
+      state.recipe.bookmarked = true;
+    else state.recipe.bookmarked = false;
+
     // console.log(recipe);
   } catch (err) {
     throw err;
@@ -79,6 +85,15 @@ export const addBookmark = function (recipe) {
   state.bookmarks.push(recipe);
 
   // Mark current recipe as bookmark
-
+  // console.log(state.recipe.bookmarked);
   if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
+  recipeView.render(state.recipe);
+};
+
+export const deleteBookmark = function (id) {
+  const index = state.bookmarks.findIndex(el => el.id === id);
+  state.bookmarks.splice(index, 1);
+  // Marking current recipe as bookmarked
+  if (id === state.recipe.id) state.recipe.bookmarked = false;
+  recipeView.render(state.recipe);
 };
