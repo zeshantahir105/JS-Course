@@ -1,9 +1,13 @@
 import View from './view.js';
-import icons from 'url:../../img/icons.svg';
 
+import icons from 'url:../../img/icons.svg';
 class BookmarksView extends View {
   _parentElement = document.querySelector('.bookmarks__list');
   _errorMsg = `No bookmarks yet. Find a nice recipe and bookmark it ;)`;
+
+  addHandlerRender(handler) {
+    window.addEventListener('load', handler);
+  }
 
   _generateMarkup() {
     // console.log(this._data);

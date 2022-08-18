@@ -82,7 +82,7 @@ export class RecipeView extends View {
               <svg class="recipe__icon">
                 <use href="${icons}#icon-check"></use>
               </svg>
-              ${ing}
+              ${typeof ing === 'string' ? ing : Object.values(ing)}
             </li>`;
               return html;
             })
